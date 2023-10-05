@@ -1,11 +1,71 @@
-import passport from "passport";
+import axios from "axios";
+import jwt from "jsonwebtoken";
 import EnvConstant from "../common/constant/env.constant.js";
+import HttpStatusConstant from "../common/constant/httpstatus.constant.js";
+import StatusResponseConstant from "../common/constant/statusResponse.constant.js";
+import MessageConstant from "../common/constant/message.constant.js";
 
-export const googleauthenticateMiddleware = passport.authenticate("google", {
-  scope: ["profile", ["email"]],
-});
+const getPublicKeysOfGoogle = async () => {
+  try {
+    const { data: publicKeys } = await axios.get(EnvConstant.GOOGLE_CERT_URL);
+    return publicKeys;
+  } catch (error) {
+    return null;
+  }
+};
 
-export const googleCallbackMiddleware = passport.authenticate("google", {
-  successRedirect: EnvConstant.CLIENT_URL,
-  failureRedirect: `${EnvConstant.SERVER_URL}/api/auth/authenticated/failed`,
-});
+export const googleauthenticateMiddleware = async (req, res, next) => {
+  try {
+    const googleToken = req.body.accessToken;
+
+    const publicKeys = await getPublicKeysOfGoogle();
+
+    if (!publicKeys) {
+      return res.status(HttpStatusConstant.UNAUTHORIZE).json({
+        status: StatusResponseConstant.ERROR,
+        message: MessageConstant.INVALID_TOKEN,
+      });
+    }
+
+    // Decode google token to get the 'kid' and header
+    const decodedToken = jwt.decode(googleToken, { complete: true });
+
+    if (!decodedToken || !decodedToken.header) {
+      return res.status(HttpStatusConstant.UNAUTHORIZE).json({
+        status: StatusResponseConstant.ERROR,
+        message: MessageConstant.INVALID_TOKEN,
+      });
+    }
+
+    const kid = decodedToken.header.kid;
+
+    // Find public key for kid from google cert
+    const publicKey = publicKeys[kid];
+    if (!publicKey) {
+      return res.status(HttpStatusConstant.UNAUTHORIZE).json({
+        status: StatusResponseConstant.ERROR,
+        message: MessageConstant.INVALID_TOKEN,
+      });
+    }
+
+    const userInfo = jwt.verify(googleToken, publicKey, {
+      algorithms: ["RS256"],
+    });
+
+    req.user = userInfo;
+    next();
+  } catch (error) {
+    console.log(error);
+    // Catch Error Token expired
+    if (error instanceof jwt.TokenExpiredError) {
+      return res.status(HttpStatusConstant.UNAUTHORIZE).json({
+        status: StatusResponseConstant.ERROR,
+        message: MessageConstant.TOKEN_EXPIRED,
+      });
+    }
+    return res.status(HttpStatusConstant.UNAUTHORIZE).json({
+      status: StatusResponseConstant.ERROR,
+      message: MessageConstant.UNAUTHORIZE,
+    });
+  }
+};

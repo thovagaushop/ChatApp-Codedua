@@ -29,4 +29,28 @@ export const findById = async (id) => {
     console.log("Error when find user by id : ", error.message);
     throw new BadRequestError(error.message);
   }
-}
+};
+
+export const update = async (id) => {
+  try {
+    const user = await User.findByIdAndUpdate(
+      id,
+      { verified: true },
+      { new: true, rawResult: false }
+    );
+    return user;
+  } catch (error) {
+    console.log("Error when update user : ", error.message);
+    throw new BadRequestError(error.message);
+  }
+};
+
+export const remove = async (id) => {
+  try {
+    await User.findByIdAndRemove(id);
+    return true;
+  } catch (error) {
+    console.log("Error when remove user : ", error.message);
+    throw new BadRequestError(error.message);
+  }
+};

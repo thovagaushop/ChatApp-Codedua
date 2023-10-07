@@ -3,6 +3,11 @@ import MessageConstant from "../common/constant/message.constant.js";
 import StatusResponseConstant from "../common/constant/statusResponse.constant.js";
 import * as userService from "../services/user.service.js";
 
+export const profile = (req, res) => {
+  console.log(req.user);
+  res.send("hello");
+};
+
 export const create = async (req, res) => {
   try {
     const user = await userService.create(req.body);
@@ -31,4 +36,4 @@ export const findById = async (req, res) => {
       message: MessageConstant.BAD_REQUEST,
     });
   }
-}
+};

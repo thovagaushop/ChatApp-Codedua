@@ -12,11 +12,12 @@ import * as userService from "./user.service.js";
 import * as otpService from "./otp.service.js";
 import * as bcrypt from "bcrypt";
 
-export const getTokenAfterLogin = ({ id, username }) => {
+export const getTokenAfterLogin = ({ id, username, avatar }) => {
   try {
     const accessToken = generateToken({
       sub: id,
       username,
+      avatar,
     });
     return accessToken;
   } catch (error) {
@@ -30,37 +31,33 @@ export const register = async ({ username, email, password }) => {
     // validate input
     if (!username || !email)
       throw new ValidationError(MessageConstant.MISSING_FIELD);
-    const user = await userService.findOne({ email });
-    if (user) throw new ConfligError(MessageConstant.EMAIL_EXISTED);
-    else {
+    let user = await userService.findOne({ email });
+    if (!user) {
       // const salt = bcrypt.genSaltSync(EnvConstant.SALT_ROUND);
-      const {
-        id: newUserId,
-        email: newUserEmail,
-        ...newUser
-      } = await userService.create({
+      user = await userService.create({
         username,
         email,
         // password: bcrypt.hashSync(password, salt),
       });
-      try {
-        // Send Email Verify
-        const otp = generateOtp();
-        await otpService.create({
-          user: newUserId,
-          otp: otp,
-          createdAt: Date.now(),
-          expiredAt: Date.now() + 300000, // 5 minute
-        });
-        await sendMailOtp(otp, newUserEmail);
-      } catch (error) {
-        // Delete user
-        await userService.remove(newUserId);
-        throw error;
-      }
-
-      return { id: newUserId, email: newUserEmail };
     }
+
+    try {
+      // Send Email Verify
+      const otp = generateOtp();
+      await otpService.create({
+        user: user.id,
+        otp: otp,
+        createdAt: Date.now(),
+        expiredAt: Date.now() + 300000, // 5 minute
+      });
+      await sendMailOtp(otp, user.email);
+    } catch (error) {
+      // Delete user
+      await userService.remove(user.id);
+      throw error;
+    }
+
+    return { id: user.id, email: user.email };
   } catch (error) {
     console.log("Error when register : ", error.message);
     throw error;
@@ -73,7 +70,6 @@ export const verifyEmail = async (userId, otp) => {
       throw new ValidationError(MessageConstant.MISSING_FIELD);
 
     const checkOtp = await otpService.findByUserId(userId);
-    console.log(checkOtp);
     if (!checkOtp) throw new OtpError(MessageConstant.INVALID_OTP);
 
     // Check otp invalid
@@ -86,12 +82,14 @@ export const verifyEmail = async (userId, otp) => {
       throw new OtpError(MessageConstant.INVALID_OTP);
     }
 
-    let user = await userService.update(userId);
+    let { id, username, avatar, ...userInfo } = await userService.update(
+      userId
+    );
     await otpService.remove(checkOtp.id);
-    // Remote password field
-    user = user.toObject();
-    delete user.password;
-    return user;
+
+    return {
+      accessToken: getTokenAfterLogin({ id, username, avatar }),
+    };
   } catch (error) {
     console.log("Error when verify email : ", error.message);
     throw error;
@@ -112,11 +110,14 @@ export const googleLogin = async (user) => {
       const accessToken = getTokenAfterLogin({
         id: checkUser.id,
         username: checkUser.username,
+        avatar: checkUser.avatar,
       });
 
-      return accessToken;
+      return {
+        accessToken: accessToken,
+      };
     } else {
-      const { id, username, ...newUser } = await userService.create({
+      const { id, username, avatar, ...newUser } = await userService.create({
         username: user["given_name"] + " " + user["family_name"],
         email: user["email"],
         authProvider: "google",
@@ -124,8 +125,9 @@ export const googleLogin = async (user) => {
         avatar: user.picture,
         verified: true,
       });
-
-      return getTokenAfterLogin({ id, username });
+      return {
+        accessToken: getTokenAfterLogin({ id, username, avatar }),
+      };
     }
   } catch (error) {
     console.log("Error when login by google : ", error.message);
@@ -142,11 +144,14 @@ export const faceBookLogin = async (user) => {
       const accessToken = getTokenAfterLogin({
         id: checkUser.id,
         username: checkUser.username,
+        avatarL: checkUser.avatar,
       });
 
-      return accessToken;
+      return {
+        accessToken: accessToken,
+      };
     } else {
-      const { id, username, ...newUser } = await userService.create({
+      const { id, username, avatar, ...newUser } = await userService.create({
         username: user["first_name"] + " " + user["last_name"],
         authProvider: "facebook",
         providerId: user.id,
@@ -154,7 +159,9 @@ export const faceBookLogin = async (user) => {
         verified: true,
       });
 
-      return getTokenAfterLogin({ id, username });
+      return {
+        accessToken: getTokenAfterLogin({ id, username, avatar }),
+      };
     }
   } catch (error) {
     console.log("Error when login by facebook : ", error.message);

@@ -40,8 +40,7 @@ passport.use(
     async function (payload, done) {
       try {
         console.log("Payload : ", payload);
-        const user = await userService.findById(payload.sub);
-        console.log("Vao day");
+        const user = await userService.findById(payload.payload.sub);
         if (!user)
           return done(null, false, { message: MessageConstant.USER_NOT_FOUND });
         else return done(null, user);

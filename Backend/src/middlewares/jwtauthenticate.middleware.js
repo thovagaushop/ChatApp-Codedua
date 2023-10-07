@@ -5,7 +5,7 @@ import passport from "../config/passport.config.js";
 import jwt from "jsonwebtoken";
 
 const jwtauthenticateMiddleware = (req, res, next) => {
-  passport.authenticate("jwt", (info, user, err) => {
+  passport.authenticate("jwt", { session: false }, (info, user, err) => {
     if (err instanceof jwt.TokenExpiredError) {
       return res.status(HttpStatusConstant.UNAUTHORIZE).json({
         status: StatusResponseConstant.ERROR,
@@ -30,6 +30,7 @@ const jwtauthenticateMiddleware = (req, res, next) => {
             message: MessageConstant.INTERNAL_SERVER_ERROR,
           });
         }
+        console.log(user);
         next();
       });
     }

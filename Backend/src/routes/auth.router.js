@@ -9,7 +9,7 @@ import { facebookAuthenticateMiddleware } from "../middlewares/facebookAuthentic
 const router = Router();
 
 // Login
-router.post("/login", authenticateMiddleware, authController.login);
+router.post("/login", authController.register);
 
 // Login by google
 router.post(
@@ -26,7 +26,7 @@ router.post(
 );
 
 // Register and verify email by otp
-router.post("/register", authController.register);
+// router.post("/register", authController.register);
 router.post("/verify", authController.verifyEmail);
 
 // Check authenticated

@@ -4,10 +4,7 @@ import authenticateMiddleware from "../middlewares/authenticate.middleware.js";
 import { googleauthenticateMiddleware } from "../middlewares/googleauthenticate.middleware.js";
 import StatusResponseConstant from "../common/constant/statusResponse.constant.js";
 import MessageConstant from "../common/constant/message.constant.js";
-import {
-  facebookAuthenticateMiddleware,
-  facebookCallbackMiddleware,
-} from "../middlewares/facebookAuthenticate.middleware.js";
+import { facebookAuthenticateMiddleware } from "../middlewares/facebookAuthenticate.middleware.js";
 
 const router = Router();
 
@@ -22,7 +19,11 @@ router.post(
 );
 
 // Login by facebook
-router.get("/facebook", facebookAuthenticateMiddleware);
+router.post(
+  "/facebook",
+  facebookAuthenticateMiddleware,
+  authController.faceBookLogin
+);
 
 // Register and verify email by otp
 router.post("/register", authController.register);

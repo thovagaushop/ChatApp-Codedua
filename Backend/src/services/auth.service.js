@@ -6,8 +6,7 @@ import {
   OtpError,
   ValidationError,
 } from "../common/exeptions/custom.exeption.js";
-import generateOtp from "../common/otp/generateOtp.js";
-import sendMailOtp from "../common/otp/sendMail.js";
+import { generateOtp, sendMailOtp } from "../common/otp/index.js";
 import { generateToken } from "./jwt.service.js";
 import * as userService from "./user.service.js";
 import * as otpService from "./otp.service.js";
@@ -29,12 +28,12 @@ export const getTokenAfterLogin = ({ id, username }) => {
 export const register = async ({ username, email, password }) => {
   try {
     // validate input
-    if (!username || !email || !password)
+    if (!username || !email)
       throw new ValidationError(MessageConstant.MISSING_FIELD);
     const user = await userService.findOne({ email });
     if (user) throw new ConfligError(MessageConstant.EMAIL_EXISTED);
     else {
-      const salt = bcrypt.genSaltSync(EnvConstant.SALT_ROUND);
+      // const salt = bcrypt.genSaltSync(EnvConstant.SALT_ROUND);
       const {
         id: newUserId,
         email: newUserEmail,
@@ -42,7 +41,7 @@ export const register = async ({ username, email, password }) => {
       } = await userService.create({
         username,
         email,
-        password: bcrypt.hashSync(password, salt),
+        // password: bcrypt.hashSync(password, salt),
       });
       try {
         // Send Email Verify
@@ -74,6 +73,8 @@ export const verifyEmail = async (userId, otp) => {
       throw new ValidationError(MessageConstant.MISSING_FIELD);
 
     const checkOtp = await otpService.findByUserId(userId);
+    console.log(checkOtp);
+    if (!checkOtp) throw new OtpError(MessageConstant.INVALID_OTP);
 
     // Check otp invalid
     if (Date.now() > checkOtp.expiredAt) {
@@ -128,6 +129,35 @@ export const googleLogin = async (user) => {
     }
   } catch (error) {
     console.log("Error when login by google : ", error.message);
+    throw error;
+  }
+};
+
+export const faceBookLogin = async (user) => {
+  try {
+    // Check user existed
+    const checkUser = await userService.findOne({ providerId: user.id });
+
+    if (checkUser) {
+      const accessToken = getTokenAfterLogin({
+        id: checkUser.id,
+        username: checkUser.username,
+      });
+
+      return accessToken;
+    } else {
+      const { id, username, ...newUser } = await userService.create({
+        username: user["first_name"] + " " + user["last_name"],
+        authProvider: "facebook",
+        providerId: user.id,
+        avatar: user.picture.data.url,
+        verified: true,
+      });
+
+      return getTokenAfterLogin({ id, username });
+    }
+  } catch (error) {
+    console.log("Error when login by facebook : ", error.message);
     throw error;
   }
 };

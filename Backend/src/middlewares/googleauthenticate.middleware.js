@@ -4,6 +4,8 @@ import EnvConstant from "../common/constant/env.constant.js";
 import HttpStatusConstant from "../common/constant/httpstatus.constant.js";
 import StatusResponseConstant from "../common/constant/statusResponse.constant.js";
 import MessageConstant from "../common/constant/message.constant.js";
+import { validateMissingField } from "../common/validations/index.js";
+import { ValidationError } from "../common/exeptions/custom.exeption.js";
 
 const getPublicKeysOfGoogle = async () => {
   try {
@@ -17,6 +19,8 @@ const getPublicKeysOfGoogle = async () => {
 export const googleauthenticateMiddleware = async (req, res, next) => {
   try {
     const googleToken = req.body.accessToken;
+    // Validate
+    validateMissingField({ googleToken: googleToken });
 
     const publicKeys = await getPublicKeysOfGoogle();
 
@@ -61,6 +65,11 @@ export const googleauthenticateMiddleware = async (req, res, next) => {
       return res.status(HttpStatusConstant.UNAUTHORIZE).json({
         status: StatusResponseConstant.ERROR,
         message: MessageConstant.TOKEN_EXPIRED,
+      });
+    } else if (error instanceof ValidationError) {
+      return res.status(error.statusCode()).json({
+        status: StatusResponseConstant.ERROR,
+        message: error.message,
       });
     }
     return res.status(HttpStatusConstant.UNAUTHORIZE).json({

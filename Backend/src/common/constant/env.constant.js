@@ -12,6 +12,7 @@ const EnvConstant = {
   SERVER_URL: process.env.SERVER_URL,
   CLIENT_URL: process.env.CLIENT_URL,
   GOOGLE_CERT_URL: process.env.GOOGLE_CERT_URL,
+  FACEBOOK_API_URL: process.env.FACEBOOK_API_URL,
 };
 
 export default EnvConstant;

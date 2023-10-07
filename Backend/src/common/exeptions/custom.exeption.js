@@ -53,7 +53,7 @@ export class OtpError extends Error {
   }
 }
 
-export class ValidationError extends Error {
+export class SendMailError extends Error {
   constructor(message) {
     super(message);
     Error.captureStackTrace(this, this.constructor);
@@ -66,12 +66,12 @@ export class ValidationError extends Error {
   }
 }
 
-export class SendMailError extends Error {
+export class ValidationError extends Error {
   constructor(message) {
     super(message);
     Error.captureStackTrace(this, this.constructor);
     this.name = this.constructor.name;
-    this.status = HttpStatusConstant.BAD_REQUEST;
+    this.status = HttpStatusConstant.INVALID;
   }
 
   statusCode() {

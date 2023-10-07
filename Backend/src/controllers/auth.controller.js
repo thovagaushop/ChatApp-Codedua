@@ -50,6 +50,21 @@ export const googleLogin = async (req, res) => {
   }
 };
 
+export const faceBookLogin = async (req, res) => {
+  try {
+    const token = await authService.faceBookLogin(req.user);
+    return res.status(HttpStatusConstant.SUCCESS).json({
+      status: StatusResponseConstant.SUCCESS,
+      accessToken: token,
+    });
+  } catch (error) {
+    return res.status(HttpStatusConstant.BAD_REQUEST).json({
+      status: StatusResponseConstant.ERROR,
+      message: MessageConstant.BAD_REQUEST,
+    });
+  }
+};
+
 export const register = async (req, res) => {
   try {
     const user = await authService.register(req.body);

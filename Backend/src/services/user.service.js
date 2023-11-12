@@ -54,3 +54,16 @@ export const remove = async (id) => {
     throw new BadRequestError(error.message);
   }
 };
+
+export const updateProfile = async (newProfile) => {
+  try {
+    const user = await User.findByIdAndUpdate(id, newProfile, {
+      new: true,
+      rawResult: false,
+    });
+    return user;
+  } catch (error) {
+    console.log("Error when update profile : ", error.message);
+    throw new BadRequestError(error.message);
+  }
+};

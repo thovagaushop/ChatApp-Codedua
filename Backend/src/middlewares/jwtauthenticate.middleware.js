@@ -30,7 +30,7 @@ const jwtauthenticateMiddleware = (req, res, next) => {
             message: MessageConstant.INTERNAL_SERVER_ERROR,
           });
         }
-        console.log(user);
+        // console.log(user);
         next();
       });
     }

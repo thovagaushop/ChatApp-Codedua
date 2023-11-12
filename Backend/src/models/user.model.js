@@ -10,7 +10,14 @@ const userSchema = new mongoose.Schema(
       type: String,
       unique: true,
     },
-    password: {
+    dob: {
+      type: mongoose.Schema.Types.Date,
+    },
+    gender: {
+      type: String,
+      enum: ["male", "female"],
+    },
+    address: {
       type: String,
     },
     role: {
@@ -36,6 +43,15 @@ const userSchema = new mongoose.Schema(
       type: Boolean,
       required: true,
       default: false,
+    },
+    timeBlock: {
+      type: mongoose.Schema.Types.Date,
+      default: new Date(),
+    },
+    // So lan duoc chat
+    timesChated: {
+      type: Number,
+      default: 0,
     },
   },
   {

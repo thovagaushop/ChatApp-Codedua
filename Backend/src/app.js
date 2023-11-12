@@ -5,6 +5,8 @@ import connection from "./config/database.config.js";
 import routes from "./routes/index.js";
 import EnvConstant from "./common/constant/env.constant.js";
 import passport from "./config/passport.config.js";
+import { Server } from "socket.io";
+import socketListener from "./listeners/socketListener.js";
 // Port
 const PORT = EnvConstant.PORT || 3000;
 
@@ -31,6 +33,15 @@ app.use(passport.session());
 // Router
 app.use("/api", routes);
 
-app.listen(PORT, () => {
+const server = app.listen(PORT, () => {
   console.log("Server is running at port : " + PORT);
 });
+
+const io = new Server(server, {
+  pingTimeout: 60000,
+  cors: {
+    origin: "http://localhost:3000",
+  },
+});
+
+socketListener(io);

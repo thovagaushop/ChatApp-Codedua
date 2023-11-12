@@ -1,14 +1,14 @@
+import * as chatService from "../services/chatRoom.service.js";
 import HttpStatusConstant from "../common/constant/httpstatus.constant.js";
-import MessageConstant from "../common/constant/message.constant.js";
 import StatusResponseConstant from "../common/constant/statusResponse.constant.js";
-import * as userService from "../services/user.service.js";
+import MessageConstant from "../common/constant/message.constant.js";
 
 export const create = async (req, res) => {
   try {
-    const user = await userService.create(req.body);
+    const chat = await chatService.create(req.body);
     return res.status(HttpStatusConstant.SUCCESS).json({
       status: StatusResponseConstant.SUCCESS,
-      data: user,
+      data: chat,
     });
   } catch (error) {
     return res.status(error.statusCode()).json({
@@ -16,14 +16,19 @@ export const create = async (req, res) => {
       message: MessageConstant.BAD_REQUEST,
     });
   }
+};
+
+export const list = async (req, res) => {
+  try {
+  } catch (error) {}
 };
 
 export const findById = async (req, res) => {
   try {
-    const user = await userService.findById(req.params.id);
+    const chat = await chatService.findById(req.params.id);
     return res.status(HttpStatusConstant.SUCCESS).json({
       status: StatusResponseConstant.SUCCESS,
-      data: user,
+      data: chat,
     });
   } catch (error) {
     return res.status(error.statusCode()).json({
@@ -33,30 +38,14 @@ export const findById = async (req, res) => {
   }
 };
 
-export const profile = async (req, res) => {
-  const user = req.user;
+export const findByUserId = async (req, res) => {
   try {
-    return res.status(HttpStatusConstant.SUCCESS).json({
-      status: StatusResponseConstant.SUCCESS,
-      data: user,
-    });
-  } catch (error) {
-    return res.status(error.statusCode()).json({
-      status: StatusResponseConstant.ERROR,
-      message: MessageConstant.BAD_REQUEST,
-    });
-  }
-};
+    console.log(req.params.userId);
+    const listChat = await chatService.findByUserId(req.params.userId);
 
-export const updateProfile = async (req, res) => {
-  try {
-    const user = await userService.updateProfile({
-      ...req.body,
-      avatar: req.file?.path,
-    });
     return res.status(HttpStatusConstant.SUCCESS).json({
       status: StatusResponseConstant.SUCCESS,
-      data: user,
+      data: listChat,
     });
   } catch (error) {
     return res.status(error.statusCode()).json({
